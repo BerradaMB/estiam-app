@@ -3,6 +3,9 @@ import { Stack, useNavigationContainerRef, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
+import { Alert, Platform } from 'react-native';
+import usePushNotifications from '../hooks/usePushNotifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,7 +20,32 @@ export default function RootLayout() {
   const router = useRouter();
   const navigationRef = useNavigationContainerRef();
 
+  usePushNotifications();
+
   useEffect(() => {
+    async function requestNotifications() {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        const { status: newStatus } = await Notifications.requestPermissionsAsync();
+        if (newStatus !== 'granted') {
+          Alert.alert('Autorisation requise', 'Veuillez activer les notifications dans les paramètres.');
+        }
+      }
+    }
+    
+    async function showNotification() {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Bienvenue !",
+          body: "Merci d'utiliser notre application. Profitez de votre expérience !",
+        },
+        trigger: null,
+      });
+    }
+    
+    requestNotifications();
+    showNotification();
+
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
